@@ -1,0 +1,25 @@
+# Stage 1
+FROM node:16-alpine
+
+WORKDIR /node_app
+
+COPY package*.json .
+
+ENV REACT_APP_MEMBER_DASHBOARD_URL=http://localhost:3007
+ENV REACT_APP_API_BASEURL=http://localhost:8080
+ENV REACT_APP_API=http://localhost:8080/api
+
+RUN npm install -g npm@9.2.0
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+RUN npm run build
+
+# Stage 2
+FROM nginx:mainline-alpine-slim
+
+# Copy the built app
+COPY --from=0 "/node_app/build" "/usr/share/nginx/html"
+
+EXPOSE 80

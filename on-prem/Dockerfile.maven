@@ -1,0 +1,21 @@
+# Base image
+FROM maven:3-adoptopenjdk-11
+
+# Save APP_DIR
+ARG APP_DIR
+ENV APP_DIR=${APP_DIR}
+
+COPY . /maven_app
+WORKDIR /maven_app
+
+# Update the submodules
+RUN git submodule deinit -f .
+RUN git submodule update --init --remote --merge
+
+# Build .jars
+RUN mvn package -DskipTests=true
+
+EXPOSE 8070 8071 8072 8073 8081 8083 8084
+
+# Run the project
+CMD java -jar ${APP_DIR}/target/*.jar

@@ -1,0 +1,12 @@
+aline-account-microservice/
+aline-admin-portal/
+aline-bank-microservice/
+aline-card-microservice/
+aline-gateway/
+aline-landing-portal/
+aline-transaction-microservice/
+aline-underwriter-microservice/
+aline-user-microservice/
+member-dashboard/
+docker-compose.yml
+.env copy

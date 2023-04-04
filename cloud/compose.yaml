@@ -1,0 +1,142 @@
+version: "3.8"
+
+x-aws-loadbalancer: aline-lb-sm
+
+x-common-environment-variables: &common-env-variables
+  DB_USERNAME: ${DB_USERNAME}
+  DB_PASSWORD: ${DB_PASSWORD}
+  DB_PORT: ${DB_PORT}
+  DB_HOST: ${DB_HOST}
+  DB_NAME: ${DB_NAME}
+  ENCRYPT_SECRET_KEY: ${ENCRYPT_SECRET_KEY}
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+services:
+  # Database
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+
+  # Maven projects
+  account:
+    image: ${ACCOUNT_AND_REGION_PREFIX}.amazonaws.com/sebastian-account
+    depends_on:
+      - mysql
+    ports:
+      - ${ACCOUNT_PORT}:${ACCOUNT_PORT}
+    environment:
+      <<: *common-env-variables
+      APP_PORT: ${ACCOUNT_PORT}
+
+  bank:
+    image: ${ACCOUNT_AND_REGION_PREFIX}.amazonaws.com/sebastian-bank
+    depends_on:
+      - mysql
+    ports:
+      - ${BANK_PORT}:${BANK_PORT}
+    environment:
+      <<: *common-env-variables
+      APP_PORT: ${BANK_PORT}
+
+  card:
+    image: ${ACCOUNT_AND_REGION_PREFIX}.amazonaws.com/sebastian-card
+    depends_on:
+      - mysql
+    ports:
+      - ${CARD_PORT}:${CARD_PORT}
+    environment:
+      <<: *common-env-variables
+      APP_PORT: ${CARD_PORT}
+
+  transaction:
+    image: ${ACCOUNT_AND_REGION_PREFIX}.amazonaws.com/sebastian-transaction
+    depends_on:
+      - mysql
+    ports:
+      - ${TRANSACTION_PORT}:${TRANSACTION_PORT}
+    environment:
+      <<: *common-env-variables
+      APP_PORT: ${TRANSACTION_PORT}
+
+  underwriter:
+    image: ${ACCOUNT_AND_REGION_PREFIX}.com/sebastian-underwriter
+    depends_on:
+      - mysql
+    ports:
+      - ${UNDERWRITER_PORT}:${UNDERWRITER_PORT}
+    environment:
+      <<: *common-env-variables
+      APP_PORT: ${UNDERWRITER_PORT}
+
+  user:
+    image: ${ACCOUNT_AND_REGION_PREFIX}.amazonaws.com/sebastian-user
+    depends_on:
+      - mysql
+    ports:
+      - ${USER_PORT}:${USER_PORT}
+    environment:
+      <<: *common-env-variables
+      APP_PORT: ${USER_PORT}
+
+  gateway:
+    image: ${ACCOUNT_AND_REGION_PREFIX}.com/sebastian-gateway
+    ports:
+      - ${GATEWAY_PORT}:${GATEWAY_PORT}
+    environment:
+      <<: *common-env-variables
+      APP_SERVICE_HOST: ${LOAD_BALANCER_DNS_NAME}
+      PORTAL_LANDING: ${PORTAL_LANDING}
+      PORTAL_DASHBOARD: ${PORTAL_DASHBOARD}
+      PORTAL_ADMIN: ${PORTAL_ADMIN}
+      APP_PORT: ${GATEWAY_PORT}
+
+x-aws-cloudformation:
+  Resources:
+    AccountTCP8072TargetGroup:
+      Properties:
+        HealthCheckIntervalSeconds: ${HEALTH_CHECK_INTERVAL_SECS}
+        HealthCheckTimeoutSeconds: ${HEALTH_CHECK_TIMEOUT_SECS}
+        HealthyThresholdCount: ${HEALTHY_THRESHOLD}
+        UnhealthyThresholdCount: ${UNHEALTHY_THRESHOLD}
+    BankTCP8083TargetGroup:
+      Properties:
+        HealthCheckIntervalSeconds: ${HEALTH_CHECK_INTERVAL_SECS}
+        HealthCheckTimeoutSeconds: ${HEALTH_CHECK_TIMEOUT_SECS}
+        HealthyThresholdCount: ${HEALTHY_THRESHOLD}
+        UnhealthyThresholdCount: ${UNHEALTHY_THRESHOLD}
+    CardTCP8084TargetGroup:
+      Properties:
+        HealthCheckIntervalSeconds: ${HEALTH_CHECK_INTERVAL_SECS}
+        HealthCheckTimeoutSeconds: ${HEALTH_CHECK_TIMEOUT_SECS}
+        HealthyThresholdCount: ${HEALTHY_THRESHOLD}
+        UnhealthyThresholdCount: ${UNHEALTHY_THRESHOLD}
+    GatewayTCP80TargetGroup:
+      Properties:
+        HealthCheckIntervalSeconds: ${HEALTH_CHECK_INTERVAL_SECS}
+        HealthCheckTimeoutSeconds: ${HEALTH_CHECK_TIMEOUT_SECS}
+        HealthyThresholdCount: ${HEALTHY_THRESHOLD}
+        UnhealthyThresholdCount: ${UNHEALTHY_THRESHOLD}
+    TransactionTCP8073TargetGroup:
+      Properties:
+        HealthCheckIntervalSeconds: ${HEALTH_CHECK_INTERVAL_SECS}
+        HealthCheckTimeoutSeconds: ${HEALTH_CHECK_TIMEOUT_SECS}
+        HealthyThresholdCount: ${HEALTHY_THRESHOLD}
+        UnhealthyThresholdCount: ${UNHEALTHY_THRESHOLD}
+    UnderwriterTCP8071TargetGroup:
+      Properties:
+        HealthCheckIntervalSeconds: ${HEALTH_CHECK_INTERVAL_SECS}
+        HealthCheckTimeoutSeconds: ${HEALTH_CHECK_TIMEOUT_SECS}
+        HealthyThresholdCount: ${HEALTHY_THRESHOLD}
+        UnhealthyThresholdCount: ${UNHEALTHY_THRESHOLD}
+    UserTCP8070TargetGroup:
+      Properties:
+        HealthCheckIntervalSeconds: ${HEALTH_CHECK_INTERVAL_SECS}
+        HealthCheckTimeoutSeconds: ${HEALTH_CHECK_TIMEOUT_SECS}
+        HealthyThresholdCount: ${HEALTHY_THRESHOLD}
+        UnhealthyThresholdCount: ${UNHEALTHY_THRESHOLD}
